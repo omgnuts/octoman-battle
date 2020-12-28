@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using System.Collections.Generic;
-    
+using Debug = UnityEngine.Debug;
+
 public class BattleStateMachine : MonoBehaviour
 {
     public enum PerformAction
@@ -22,6 +23,7 @@ public class BattleStateMachine : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
+        Debug.Log("yeikssa");
         battleStates = PerformAction.Wait;
         enemies.AddRange(GameObject.FindGameObjectsWithTag("Enemy"));
         heroes.AddRange(GameObject.FindGameObjectsWithTag("Hero"));

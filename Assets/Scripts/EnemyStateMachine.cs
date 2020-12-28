@@ -24,7 +24,7 @@ public class EnemyStateMachine : MonoBehaviour
 
     private Vector3 startPosition; 
     
-    // Start is called before the first frame update
+    // Start is called before the first frame update    
     private void Start()
     {
         currentState = TurnState.Processing;
@@ -35,8 +35,6 @@ public class EnemyStateMachine : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        Debug.Log(currentState);
-        
         switch (currentState)
         {
             case (TurnState.Processing):
