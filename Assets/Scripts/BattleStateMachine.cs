@@ -23,11 +23,10 @@ public class BattleStateMachine : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        Debug.Log("yeikssa");
         battleStates = PerformAction.Wait;
         enemies.AddRange(GameObject.FindGameObjectsWithTag("Enemy"));
         heroes.AddRange(GameObject.FindGameObjectsWithTag("Hero"));
-
+        
     }
 
     // Update is called once per frame
