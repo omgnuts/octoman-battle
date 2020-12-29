@@ -27,10 +27,13 @@ public class HeroStateMachine : MonoBehaviour
     private float maxCooldown = 5f;
 
     public Image ProgressFG;
+    public GameObject Selector;
      
     // Start is called before the first frame update
     private void Start()
     {
+        currCooldown = Random.Range(0, 2.5f);
+        Selector.SetActive(false);
         currentState = TurnState.Processing;
         battleStateMachine = GameObject.Find("BattleManager").GetComponent<BattleStateMachine>();
     }
@@ -71,4 +74,16 @@ public class HeroStateMachine : MonoBehaviour
             currentState = TurnState.ComputeAction;
         }
     }
+
+    public void MakeNewAction(GameObject enemySelected)
+    {
+        BattleAction action = new BattleAction
+        {
+            attackerGameObject = gameObject,
+            defenderGameObject = enemySelected,
+            attackerType = BattleAction.ToonType.Hero
+        };
+        battleStateMachine.AddAction(action);
+    }
+
 }

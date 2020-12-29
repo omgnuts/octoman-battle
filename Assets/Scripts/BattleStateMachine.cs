@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,8 +25,11 @@ public class BattleStateMachine : MonoBehaviour
     public List<GameObject> enemiesAlive = new List<GameObject>();
 
     public GameObject enemyButton;
-    public Transform Spacer; 
-    
+    public Transform Spacer;
+
+    public GameObject AttackPanel;
+    public GameObject EnemySelectPanel;
+
     public enum HeroGui
     {
         Activate, 
@@ -37,16 +41,20 @@ public class BattleStateMachine : MonoBehaviour
 
     public HeroGui HeroInput;
     public List<GameObject> heroesToManage = new List<GameObject>();
-    private BattleAction HeroSelection;
-    
-    
+    private GameObject HeroSelected;
+
     // Start is called before the first frame update
     private void Start()
     {
         battleState = PerformAction.Waiting;
         enemiesAlive.AddRange(GameObject.FindGameObjectsWithTag("Enemy"));
         heroesAlive.AddRange(GameObject.FindGameObjectsWithTag("Hero"));
-        CreateEnemyButtons(); 
+
+        HeroInput = HeroGui.Activate;
+        AttackPanel.SetActive(false);
+        EnemySelectPanel.SetActive(false);
+        
+        CreateEnemyButtons();
     }
 
     // Update is called once per frame
@@ -73,11 +81,31 @@ public class BattleStateMachine : MonoBehaviour
                     
                 } 
                 
-                
-                
                 break;
             case PerformAction.PerformAction: break;
-            default: break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        switch (HeroInput)
+        {
+            case HeroGui.Activate:
+                if (heroesToManage.Count > 0)
+                {
+                    // heroesToManage[0].transform.Find("Selector").gameObject.SetActive(true);
+                    heroesToManage[0].GetComponent<HeroStateMachine>().Selector.SetActive(true);
+                    
+                    AttackPanel.SetActive(true);
+                    HeroInput = HeroGui.Waiting;
+                }
+                break;
+
+            case HeroGui.Waiting:
+                // idle;
+                break;
+            
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -96,7 +124,28 @@ public class BattleStateMachine : MonoBehaviour
             
             newButton.GetComponentInChildren<Text>().text = currEsm.enemy.name;
             button.EnemyPrefab = enemy;
+            
             newButton.transform.SetParent(Spacer);
         }
+    }
+
+    public void InputAttack()
+    {
+        HeroSelected = heroesToManage[0];
+        AttackPanel.SetActive(false);
+        EnemySelectPanel.SetActive(true);
+    }
+
+    public void InputEnemy(GameObject enemySelected)
+    {
+        HeroStateMachine hsm = HeroSelected.GetComponent<HeroStateMachine>();
+        
+        hsm.MakeNewAction(enemySelected);
+        hsm.Selector.SetActive(false);
+        
+        heroesToManage.RemoveAt(0);
+        
+        EnemySelectPanel.SetActive(false);
+        HeroInput = HeroGui.Activate;
     }
 }
