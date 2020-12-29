@@ -246,6 +246,7 @@ MonoBehaviour:
   currentState: 0
   ProgressFG: {fileID: 1769751469}
   Selector: {fileID: 1191681653}
+  enemyToAttack: {fileID: 0}
 --- !u!1 &98841959
 GameObject:
   m_ObjectHideFlags: 0
@@ -613,6 +614,7 @@ MonoBehaviour:
   currentState: 0
   ProgressFG: {fileID: 543030926}
   Selector: {fileID: 999593891}
+  enemyToAttack: {fileID: 0}
 --- !u!1 &417587806
 GameObject:
   m_ObjectHideFlags: 0
