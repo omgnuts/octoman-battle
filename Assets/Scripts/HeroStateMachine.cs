@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using common;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,19 +24,27 @@ public class HeroStateMachine : MonoBehaviour
 
     public TurnState currentState;
 
-    private float currCooldown = 0f;
+    private float currentCooldown = 0f;
     private float maxCooldown = 5f;
 
     public Image ProgressFG;
     public GameObject Selector;
      
+    private Vector3 startPosition;
+    // private readonly object actionLock = new Object();
+    private volatile bool actionLock;
+    public GameObject enemyToAttack;
+    const float animSpeed = 5f; 
+    
     // Start is called before the first frame update
     private void Start()
     {
-        currCooldown = Random.Range(0, 2.5f);
+        currentCooldown = Random.Range(0, 2.5f);
         Selector.SetActive(false);
+        
         currentState = TurnState.Processing;
         battleStateMachine = GameObject.Find("BattleManager").GetComponent<BattleStateMachine>();
+        startPosition = transform.position;
     }
 
     // Update is called once per frame
@@ -51,11 +60,12 @@ public class HeroStateMachine : MonoBehaviour
                 currentState = TurnState.Waiting;
                 break;
             case (TurnState.Waiting):
-                // idlestate
-                
+                // idlestate    
                 break;
-            
-            case (TurnState.PerformAction): break;
+            case (TurnState.PerformAction): 
+                // TryLock.Execute(actionLock, () => StartCoroutine(TimeForAction()));
+                StartCoroutine(TimeForAction());
+                break;
             case (TurnState.Dead): break;
             default: break;
         }
@@ -63,13 +73,13 @@ public class HeroStateMachine : MonoBehaviour
 
     void updateProgressBar()
     {
-        currCooldown += Time.deltaTime;
-        var ratio = currCooldown / maxCooldown;
+        currentCooldown += Time.deltaTime;
+        var ratio = currentCooldown / maxCooldown;
         
         ProgressFG.transform.localScale = new Vector3(Mathf.Clamp(ratio, 0f, 1f),
             ProgressFG.transform.localScale.y, ProgressFG.transform.localScale.z);
 
-        if (currCooldown >= maxCooldown)
+        if (currentCooldown >= maxCooldown)
         {
             currentState = TurnState.ComputeAction;
         }
@@ -86,4 +96,45 @@ public class HeroStateMachine : MonoBehaviour
         battleStateMachine.AddAction(action);
     }
 
+    public IEnumerator TimeForAction()
+    {
+        if (actionLock) yield break;
+        actionLock = true;
+    
+        // animate enemy near hero to attack
+        Vector3 enemyPosition = enemyToAttack.transform.position.WithOffset(1.5f);
+        while (MoveToHero(enemyPosition)) yield return null;
+
+        // wait a bit
+        yield return new WaitForSeconds(0.2f);
+
+        // do damage & animation attack
+
+        // animate back to start position
+        while (MoveToStart(startPosition)) yield return null;
+
+        // remove performer from the list
+        battleStateMachine.actions.RemoveAt(0);
+        
+        // reset battle state machine to wait
+        battleStateMachine.battleState = BattleStateMachine.PerformAction.Waiting;
+
+        currentCooldown = 0f;
+        currentState = TurnState.Processing;
+        
+        // end coroutine
+        actionLock = false;
+    }
+
+    private bool MoveToHero(Vector3 destPosition)
+    {
+        return destPosition != (transform.position =
+            Vector3.MoveTowards(transform.position, destPosition, animSpeed * Time.deltaTime));
+    }
+
+    private bool MoveToStart(Vector3 startPosition)
+    {
+        return startPosition != (transform.position =
+            Vector3.MoveTowards(transform.position, startPosition, animSpeed * Time.deltaTime));
+    }
 }

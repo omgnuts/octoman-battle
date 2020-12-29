@@ -78,11 +78,16 @@ public class BattleStateMachine : MonoBehaviour
                 }
                 else // if hero
                 {
-                    
-                } 
-                
+                    HeroStateMachine hsm = performer.GetComponent<HeroStateMachine>();
+                    hsm.enemyToAttack = action.defenderGameObject;
+                    hsm.currentState = HeroStateMachine.TurnState.PerformAction;
+                }
+
+                battleState = PerformAction.PerformAction;
                 break;
-            case PerformAction.PerformAction: break;
+            case PerformAction.PerformAction:
+                // idle
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
