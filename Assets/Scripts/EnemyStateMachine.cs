@@ -77,7 +77,7 @@ public class EnemyStateMachine : MonoBehaviour
         BattleAction action = new BattleAction
         {
             attackerGameObject = gameObject,
-            defenderGameObject = battleStateMachine.heroes[Random.Range(0, battleStateMachine.heroes.Count)],
+            defenderGameObject = battleStateMachine.heroesAlive[Random.Range(0, battleStateMachine.heroesAlive.Count)],
             attackerType = BattleAction.ToonType.Enemy
         };
         battleStateMachine.AddAction(action);

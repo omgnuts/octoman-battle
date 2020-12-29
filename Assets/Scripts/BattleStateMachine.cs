@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
+using UnityEngine.UI;
 
 public class BattleStateMachine : MonoBehaviour
 {
@@ -15,19 +17,36 @@ public class BattleStateMachine : MonoBehaviour
         PerformAction
     }
 
-    [FormerlySerializedAs("battleStates")] public PerformAction battleState;
+    public PerformAction battleState;
 
     public List<BattleAction> actions = new List<BattleAction>();
-    public List<GameObject> heroes = new List<GameObject>();
-    public List<GameObject> enemies = new List<GameObject>();
+    public List<GameObject> heroesAlive = new List<GameObject>();
+    public List<GameObject> enemiesAlive = new List<GameObject>();
+
+    public GameObject enemyButton;
+    public Transform Spacer; 
+    
+    public enum HeroGui
+    {
+        Activate, 
+        Waiting, 
+        Input1, // basic attack
+        Input2, // select enemy
+        Done
+    }
+
+    public HeroGui HeroInput;
+    public List<GameObject> heroesToManage = new List<GameObject>();
+    private BattleAction HeroSelection;
+    
     
     // Start is called before the first frame update
     private void Start()
     {
         battleState = PerformAction.Waiting;
-        enemies.AddRange(GameObject.FindGameObjectsWithTag("Enemy"));
-        heroes.AddRange(GameObject.FindGameObjectsWithTag("Hero"));
-        
+        enemiesAlive.AddRange(GameObject.FindGameObjectsWithTag("Enemy"));
+        heroesAlive.AddRange(GameObject.FindGameObjectsWithTag("Hero"));
+        CreateEnemyButtons(); 
     }
 
     // Update is called once per frame
@@ -65,5 +84,19 @@ public class BattleStateMachine : MonoBehaviour
     public void AddAction(BattleAction action)
     {
         actions.Add(action);
+    }
+
+    private void CreateEnemyButtons()
+    {
+        foreach (GameObject enemy in enemiesAlive)
+        {
+            GameObject newButton = Instantiate(enemyButton) as GameObject; 
+            EnemySelectButton button = newButton.GetComponent<EnemySelectButton>();
+            EnemyStateMachine currEsm = enemy.GetComponent<EnemyStateMachine>();
+            
+            newButton.GetComponentInChildren<Text>().text = currEsm.enemy.name;
+            button.EnemyPrefab = enemy;
+            newButton.transform.SetParent(Spacer);
+        }
     }
 }

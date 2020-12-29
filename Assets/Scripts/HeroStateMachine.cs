@@ -10,6 +10,8 @@ public class HeroStateMachine : MonoBehaviour
 {
     public BaseHero hero;
     
+    public BattleStateMachine battleStateMachine; 
+    
     public enum TurnState
     {
         Processing, 
@@ -30,6 +32,7 @@ public class HeroStateMachine : MonoBehaviour
     private void Start()
     {
         currentState = TurnState.Processing;
+        battleStateMachine = GameObject.Find("BattleManager").GetComponent<BattleStateMachine>();
     }
 
     // Update is called once per frame
@@ -40,8 +43,15 @@ public class HeroStateMachine : MonoBehaviour
             case (TurnState.Processing):
                 updateProgressBar();
                 break;
-            case (TurnState.ComputeAction): break;
-            case (TurnState.Waiting): break;
+            case (TurnState.ComputeAction): 
+                battleStateMachine.heroesToManage.Add(this.gameObject);
+                currentState = TurnState.Waiting;
+                break;
+            case (TurnState.Waiting):
+                // idlestate
+                
+                break;
+            
             case (TurnState.PerformAction): break;
             case (TurnState.Dead): break;
             default: break;
