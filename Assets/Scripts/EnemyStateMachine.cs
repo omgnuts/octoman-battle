@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using common;
 using UnityEngine;
 
 public class EnemyStateMachine : MonoBehaviour
@@ -11,18 +12,24 @@ public class EnemyStateMachine : MonoBehaviour
     public enum TurnState
     {
         Processing, 
-        MakeAction, 
+        ComputeAction, 
         Waiting,
-        Action, 
+        PerformAction, 
         Dead
     }
 
     public TurnState currentState;
 
-    private float currCooldown = 0f;
-    private float maxCooldown = 5f;
+    private float currentCooldown = 0f;
+    const float maxCooldown = 5f;
 
-    private Vector3 startPosition; 
+    private Vector3 startPosition;
+
+    // private readonly object actionLock = new Object();
+    private volatile bool actionLock;
+    
+    public GameObject heroToAttack;
+    const float animSpeed = 5f; 
     
     // Start is called before the first frame update    
     private void Start()
@@ -40,13 +47,16 @@ public class EnemyStateMachine : MonoBehaviour
             case (TurnState.Processing):
                 updateProgressBar();
                 break;
-            case (TurnState.MakeAction): 
+            case (TurnState.ComputeAction): 
                 makeNewAction();
                 currentState = TurnState.Waiting;
                 break;
             case (TurnState.Waiting): break;
 
-            case (TurnState.Action): break;
+            case (TurnState.PerformAction): 
+                // TryLock.Execute(actionLock, () => StartCoroutine(TimeForAction()));
+                StartCoroutine(TimeForAction());
+                break;
             case (TurnState.Dead): break;
             default: break;
         }
@@ -54,19 +64,64 @@ public class EnemyStateMachine : MonoBehaviour
 
     void updateProgressBar() 
     {
-        currCooldown += Time.deltaTime;
+        currentCooldown += Time.deltaTime;
         
-        if (currCooldown >= maxCooldown)
+        if (currentCooldown >= maxCooldown)
         {
-            currentState = TurnState.MakeAction;
+            currentState = TurnState.ComputeAction;
         }
     }
 
     void makeNewAction()
     {
-        BattleAction action = new BattleAction();
-        action.attackerGameObject = this.gameObject;
-        action.defenderGameObject = battleStateMachine.heroes[Random.Range(0, battleStateMachine.heroes.Count)];
+        BattleAction action = new BattleAction
+        {
+            attackerGameObject = gameObject,
+            defenderGameObject = battleStateMachine.heroes[Random.Range(0, battleStateMachine.heroes.Count)],
+            attackerType = BattleAction.ToonType.Enemy
+        };
         battleStateMachine.AddAction(action);
+    }
+    
+    public IEnumerator TimeForAction()
+    {
+        if (actionLock) yield break;
+        actionLock = true;
+    
+        // animate enemy near hero to attack
+        Vector3 heroPosition = heroToAttack.transform.position.WithOffset(-1.5f);
+        while (MoveToHero(heroPosition)) yield return null;
+
+        // wait a bit
+        yield return new WaitForSeconds(0.2f);
+
+        // do damage & animation attack
+
+        // animate back to start position
+        while (MoveToStart(startPosition)) yield return null;
+
+        // remove performer from the list
+        battleStateMachine.actions.RemoveAt(0);
+        
+        // reset battle state machine to wait
+        battleStateMachine.battleState = BattleStateMachine.PerformAction.Waiting;
+
+        currentCooldown = 0f;
+        currentState = TurnState.Processing;
+        
+        // end coroutine
+        actionLock = false;
+    }
+
+    private bool MoveToHero(Vector3 destPosition)
+    {
+        return destPosition != (transform.position =
+            Vector3.MoveTowards(transform.position, destPosition, animSpeed * Time.deltaTime));
+    }
+
+    private bool MoveToStart(Vector3 startPosition)
+    {
+        return startPosition != (transform.position =
+            Vector3.MoveTowards(transform.position, startPosition, animSpeed * Time.deltaTime));
     }
 }

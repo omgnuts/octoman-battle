@@ -13,9 +13,9 @@ public class HeroStateMachine : MonoBehaviour
     public enum TurnState
     {
         Processing, 
-        MakeAction, 
+        ComputeAction, 
         Waiting, 
-        Action, 
+        PerformAction, 
         Dead
     }
 
@@ -40,9 +40,9 @@ public class HeroStateMachine : MonoBehaviour
             case (TurnState.Processing):
                 updateProgressBar();
                 break;
-            case (TurnState.MakeAction): break;
+            case (TurnState.ComputeAction): break;
             case (TurnState.Waiting): break;
-            case (TurnState.Action): break;
+            case (TurnState.PerformAction): break;
             case (TurnState.Dead): break;
             default: break;
         }
@@ -58,7 +58,7 @@ public class HeroStateMachine : MonoBehaviour
 
         if (currCooldown >= maxCooldown)
         {
-            currentState = TurnState.MakeAction;
+            currentState = TurnState.ComputeAction;
         }
     }
 }
